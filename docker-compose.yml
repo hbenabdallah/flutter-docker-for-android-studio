@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  android:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - USER_ID=${USER_ID:-1000}
+        - GROUP_ID=${GROUP_ID:-1000}
+        - USER=${USER:-user}
+    container_name: flutter-android-dev
+    user: "${USER_ID:-1000}:${GROUP_ID:-1000}"
+    volumes:
+      - ${FLUTTER_PROJECT_PATH}:${FLUTTER_PROJECT_PATH}
+      - flutter-cache:${HOME_PATH}/.flutter
+      - android-cache:${HOME_PATH}/.android
+      - gradle-cache:${HOME_PATH}/.gradle
+      - pub-cache:${HOME_PATH}/.pub-cache
+      - /dev/bus/usb:/dev/bus/usb
+      - ./sdk:/workspace/sdk
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+    environment:
+      - JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+      - ANDROID_HOME=/workspace/sdk/android
+      - ANDROID_SDK_ROOT=/workspace/sdk/android
+      - FLUTTER_HOME=/opt/flutter
+      - DART_HOME=/opt/flutter/bin/cache/dart-sdk
+      - PUB_CACHE=${HOME_PATH}/.pub-cache
+      - HOME=${HOME_PATH}
+      - USER=${USER}
+      - PATH=/opt/flutter/bin:/opt/flutter/bin/cache/dart-sdk/bin:${HOME_PATH}/.pub-cache/bin:/workspace/sdk/android/cmdline-tools/latest/bin:/workspace/sdk/android/platform-tools:/usr/lib/jvm/java-17-openjdk-amd64/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+      - DISPLAY=${DISPLAY}
+    stdin_open: true
+    tty: true
+    network_mode: host
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+volumes:
+  flutter-cache:
+  android-cache:
+  gradle-cache:
+  pub-cache:
+
