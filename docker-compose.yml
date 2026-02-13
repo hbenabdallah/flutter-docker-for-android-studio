@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  android:
+    build:
+      network: host
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - USER_ID=${USER_ID:-1000}
+        - GROUP_ID=${GROUP_ID:-1000}
+        - USER=${USER:-user}
+    container_name: flutter-android-dev
+    user: "${USER_ID:-1000}:${GROUP_ID:-1000}"
+    volumes:
+      # Workspace (containing your projects) at the same path as on the host, so the flutter/dart
+      # wrappers can run in the current directory
+      - ${WORKSPACE_PATH:?WORKSPACE_PATH is not set, run make setup-env}:${WORKSPACE_PATH}
+      - flutter-cache:${HOME_PATH}/.flutter
+      - android-cache:${HOME_PATH}/.android
+      - gradle-cache:${HOME_PATH}/.gradle
+      # Host pub cache at the same path, so package_config.json and Gradle plugin paths resolve on the host
+      - ${HOME_PATH}/.pub-cache:${HOME_PATH}/.pub-cache
+      - /dev/bus/usb:/dev/bus/usb
+      - ./sdk:/workspace/sdk
+      # Same absolute path as on the host, so android/local.properties written in the
+      # container (sdk.dir / flutter.sdk) also resolves for Android Studio on the host.
+      - ./sdk:${SDK_PATH}
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+    environment:
+      - JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+      - SDK_PATH=${SDK_PATH}
+      - ANDROID_HOME=${SDK_PATH}/android
+      - ANDROID_SDK_ROOT=${SDK_PATH}/android
+      - FLUTTER_HOME=${SDK_PATH}/flutter
+      - DART_HOME=${SDK_PATH}/flutter/bin/cache/dart-sdk
+      - PUB_CACHE=${HOME_PATH}/.pub-cache
+      - HOME=${HOME_PATH}
+      - USER=${USER}
+      - PATH=${SDK_PATH}/flutter/bin:${SDK_PATH}/flutter/bin/cache/dart-sdk/bin:${HOME_PATH}/.pub-cache/bin:${SDK_PATH}/android/cmdline-tools/latest/bin:${SDK_PATH}/android/platform-tools:/usr/lib/jvm/java-17-openjdk-amd64/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+      - DISPLAY=${DISPLAY}
+    stdin_open: true
+    tty: true
+    network_mode: host
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+volumes:
+  flutter-cache:
+  android-cache:
+  gradle-cache:
+  pub-cache:
+
